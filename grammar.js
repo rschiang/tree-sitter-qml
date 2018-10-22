@@ -10,7 +10,8 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
     ]),
 
     inline: ($, previous) => previous.concat([
-
+        $._qualified_identifier,
+        $._type_identifier
     ]),
 
     rules: {
@@ -41,15 +42,15 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
         ),
 
         named_import: $ => seq(
-            'as', $.identifier
+            'as', alias($.identifier, $.type_identifier)
         ),
 
         //
-        // Object definitions
+        // QML Object
         //
 
         object_declaration: $ => seq(
-            $._qualified_id, $.object_block
+            $._qualified_identifier, $.object_block
         ),
 
         object_block: $ => seq(
@@ -60,16 +61,28 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
                 $.property_declaration,
                 $.enum,
                 seq($._qualified_id, ':', $.property_value),
-                seq($._qualified_id, 'on', $._qualified_id, $.object_block),
+                seq($._qualified_identifier, 'on', $._qualified_identifier, $.object_block),
                 $.function,
                 $.variable_declaration
             )),
             '}'
         ),
 
+        //
+        // QML Signal
+        //
+
         signal_declaration: $ => seq(
-            'signal', $.identifier, optional($.formal_parameters), $._semicolon
+            'signal', $.identifier, optional($.signal_parameters), $._semicolon
         ),
+
+        signal_parameters: $ => seq(
+            '(', commaSep(seq($.property_type, $.identifier)), ')'
+        ),
+
+        //
+        // QML Property
+        //
 
         property_declaration: $ => seq(
             choice(
@@ -80,20 +93,20 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
             $._semicolon
         ),
 
-        property_type: $ => choice(
-            'var',
-            reservedword,
-            $.identifier,
-            seq($.property_type, '.', $.identifier),
-        ),
-
         property_declarator: $ => seq(
             'property',
             choice(
                 $.property_type,
-                seq($.identifier, '<', $.property_type, '>'),
+                seq($._type_identifier, '<', $.property_type, '>')
             ),
-            $.identifier
+            alias($.identifier, $.property_identifier)
+        ),
+
+        property_type: $ => choice(
+            'var',
+            $._reserved_identifier,
+            $._type_identifier,
+            seq($.property_type, '.', $.property_type)
         ),
 
         property_value: $ => seq(
@@ -105,16 +118,20 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
             )
         ),
 
+        //
+        // QML Enum
+        //
+
         enum: $ => seq(
             'enum',
-            $.identifier,
+            $._type_identifier,
             '{',
-            commaSep($.enum_member),
+            commaSep1($.enum_member),
              '}'
         ),
 
         enum_member: $ => seq(
-            $.identifier,
+            $._property_identifier,
             optional(seq('=', $.number))
         ),
 
@@ -132,21 +149,26 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
             $.try_statement
         ),
 
+        //
         // Expressions
+        //
 
-        literal: $ => choice(
-            $.null,
-            $.true,
-            $.false,
-            $.number,
-            $.string,
-            $.template_string
+        // dunno what this thing is but it appeared in parser rule
+        meta_property: $ => seq(
+            'new', '.', $.identifier
         ),
 
         primary_expression: $ => choice(
             $.this,
             $._identifier_reference,
-            $.literal,
+
+            $.null,
+            $.true,
+            $.false,
+            $.number,
+            $.string,
+            $.template_string,
+
             $.array,
             $.object,
             $.function,
@@ -154,11 +176,6 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
             $.arrow_function,
             $.generator_function,
             $.regex
-        ),
-
-        // dunno what this thing is but it appeared in parser rule
-        meta_property: $ => seq(
-            'new', '.', $.identifier
         ),
 
         qml_member_expression: $ => choice(
@@ -170,9 +187,18 @@ module.exports = grammar(require('tree-sitter-javascript/grammar'), {
             seq($.qml_member_expression, $.template_string)
         ),
 
+        //
         // Identifiers
+        //
 
-        _qualified_id: $ => alias($.qml_member_expression, $.identifier),
+        _qualified_identifier: $ => alias($.qml_member_expression, $.qualified_identifier),
+
+        _type_identifier: $ => alias($.identifier, $.type_identifier),
+
+        _reserved_identifier: ($, previous) => choice(
+            'enum',
+            previous
+        )
 
     }
 });
