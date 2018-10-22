@@ -1,0 +1,29 @@
+========
+QML file
+========
+
+This is an example QML file.
+
+---
+
+// Button.qml
+import QtQuick 2.0
+import "magic.js" as Magic
+
+Rectangle {
+    width: 100; height: 100
+    color: mousearea.pressed ? "red" : Qt.transparent
+
+    MouseArea {
+        id: mousearea
+        anchors.fill: parent
+        onClicked: console.log("Button clicked!")
+        Keys.onPressed: {
+            console.log("Hello world")
+        }
+    }
+
+    Behavior on x {
+        NumberAnimation {}
+    }
+}

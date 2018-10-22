@@ -4,7 +4,7 @@
   "description": "Tree-sitter support for QML language",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx tree-sitter generate && node-gyp build"
   },
   "repository": {
     "type": "git",
@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/rschiang/tree-sitter-qml#readme",
   "dependencies": {
-    "nan": "^2.11.1"
+    "nan": "^2.11.1",
+    "tree-sitter-javascript": "^0.13.7"
   },
   "devDependencies": {
     "tree-sitter-cli": "^0.13.10"
