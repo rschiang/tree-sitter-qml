@@ -19,11 +19,15 @@ Rectangle {
         anchors.fill: parent
         onClicked: console.log("Button clicked!")
         Keys.onPressed: {
-            console.log("Hello world")
+            Magic.perform()
         }
     }
 
     Behavior on x {
-        NumberAnimation {}
+        NumberAnimation { from: 0; to: 100; duration: 500 }
+    }
+
+    function blink() {
+        x += 20
     }
 }
