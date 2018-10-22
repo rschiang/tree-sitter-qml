@@ -4,7 +4,7 @@
   "description": "Tree-sitter support for QML language",
   "main": "index.js",
   "scripts": {
-    "build": "npx tree-sitter generate && node-gyp build"
+    "build": "tree-sitter generate && node-gyp build"
   },
   "repository": {
     "type": "git",
